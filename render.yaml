@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: calendly-elevenlabs-voice-agent
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/index.js
+    autoDeploy: true
