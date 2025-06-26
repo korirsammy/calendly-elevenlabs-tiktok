@@ -4,5 +4,5 @@ services:
     env: node
     plan: free
     buildCommand: npm install
-    startCommand: node src/index.js
+    startCommand: node src/server.js
     autoDeploy: true
