@@ -1,3 +1,4 @@
+
 // src/server.js
 require('./utils/secure-logging');
 const express = require('express');
@@ -10,6 +11,7 @@ const calendlyRoutes = require('./routes/calendly');
 const notificationsRoutes = require('./routes/notifications');
 const elevenlabsRoutes = require('./routes/elevenlabs');
 const promptBuilderRoutes = require('./routes/promptBuilder');
+const calendlyTestRoute = require('./routes/calendly-test'); // ✅ Test route
 
 // Import authentication middleware
 const auth = require('./middleware/auth');
@@ -18,6 +20,9 @@ const auth = require('./middleware/auth');
 const app = express();
 app.set('trust proxy', 1);
 const PORT = config.port;
+
+// Mount Calendly test route early (no auth required)
+app.use('/api', calendlyTestRoute);
 
 // Force HTTPS in production
 if (process.env.NODE_ENV === 'production') {
@@ -56,34 +61,31 @@ const corsOptions = {
     ? [process.env.APP_URL || 'http://localhost:3000'].concat(
         (process.env.ALLOWED_ORIGINS || '').split(',').filter(origin => origin.trim())
       )
-    : '*', // Allow all origins in development
+    : '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   credentials: true,
-  maxAge: 86400 // 24 hours
+  maxAge: 86400
 };
 app.use(cors(corsOptions));
 
-// API rate limiting to prevent abuse
+// API rate limiting
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests, please try again later.' }
 });
-
-// Enable rate limiting for API routes
 app.use('/api', apiLimiter);
 
-// Protect admin-specific static files with admin auth
+// Admin-protected routes
 app.get(['/agent-builder.html', '/prompt-builder.html'], auth.adminAuth, (req, res, next) => {
   next();
 });
 
-// Serve static files from the public directory
+// Serve static files
 app.use(express.static(path.join(__dirname, '../public'), {
-  // Add security headers for static files
   setHeaders: (res, path) => {
     res.set('X-Content-Type-Options', 'nosniff');
     res.set('X-Frame-Options', 'SAMEORIGIN');
@@ -91,7 +93,7 @@ app.use(express.static(path.join(__dirname, '../public'), {
   }
 }));
 
-// Health check endpoint (no auth required)
+// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -101,10 +103,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Apply authentication middleware to all API routes
+// Apply auth middleware to secure API routes (excluding /calendly-test)
 app.use('/api', auth.authenticateApiKey);
 
-// API Routes
+// Mount main routes
 app.use('/api/calendly', calendlyRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/elevenlabs', elevenlabsRoutes);
@@ -112,10 +114,7 @@ app.use('/api/prompt-builder', promptBuilderRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
-  // Log the error for server-side debugging
   console.error('Unhandled error:', err);
-  
-  // Send sanitized error response
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'production' 
@@ -125,7 +124,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
   console.log(`
   ================================================
