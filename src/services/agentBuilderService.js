@@ -296,13 +296,7 @@ async function createAgentConfig(options) {
                 system_tool_type: "end_call"
               }
             }
-          ],
-          tool_ids: [
-            "ynkWMyhMnGlLHAv7o5XI", 
-            "OWO956TMCS1s6dN1jgp9", 
-            "yzW6vNfJybNSU8Q8YJeo",
-            "4llGAKqlunOuAWS1pfBv"  
-          ],
+          ],          
           mcp_server_ids: [],
           knowledge_base: [],
           custom_llm: null,
