@@ -1,27 +1,19 @@
-// src/config/elevenlabsAgent.js
 const systemPrompt = require('./prompts/systemPrompt');
+const config = require('./environment'); // ✅ import config to access env variables
 
-/**
- * Creates a configuration object for the Elevenlabs agent with
- * functions, webhooks, and system prompt configuration.
- * 
- * @param {Object} options - Configuration options
- * @param {string} options.agentName - Name for the agent
- * @param {string} options.serverUrl - URL where this server is hosted
- * @param {Array} options.calendlyEvents - List of available Calendly events
- * @returns {Object} Elevenlabs agent configuration
- */
 function createAgentConfig(options) {
   const { agentName, serverUrl, calendlyEvents } = options;
-  
+
   return {
     name: agentName || "Calendly Booking Assistant",
     description: "A voice assistant that helps users book calendar appointments via Calendly.",
     system_prompt: systemPrompt,
-    voices: [{
-      voice_id: "EXAVITQu4vr4xnSDxMaL", // Default voice
-      name: "Rachel"
-    }],
+    voices: [
+      {
+        voice_id: "EXAVITQu4vr4xnSDxMaL",
+        name: "Rachel"
+      }
+    ],
     functions: [
       {
         name: "checkAvailability",
@@ -98,7 +90,7 @@ function createAgentConfig(options) {
         url: `${serverUrl}/api/elevenlabs/personalization`,
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": "{{SERVER_API_KEY}}"
+          "X-API-Key": config.apiKey // ✅ Use actual API key from env
         },
         context_variables: ["current_date", "current_time", "caller_number"]
       }
@@ -107,8 +99,8 @@ function createAgentConfig(options) {
       {
         url: `${serverUrl}/api/elevenlabs/function-handler`,
         headers: {
-          "Content-Type": "application/json", 
-          "X-API-Key": "{{SERVER_API_KEY}}"
+          "Content-Type": "application/json",
+          "X-API-Key": config.apiKey // ✅ Use actual API key from env
         }
       }
     ]
